@@ -1,0 +1,33 @@
+name: CI - Build and Smoke Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build images
+        run: docker compose build web
+
+      - name: Run container (detached)
+        run: docker compose up -d web
+
+      - name: Smoke test /health
+        run: |
+          echo "Waiting for app to start..."
+          sleep 10
+          curl -f http://localhost:8000/health
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v
