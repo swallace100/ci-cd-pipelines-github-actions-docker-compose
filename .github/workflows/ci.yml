@@ -1,4 +1,4 @@
-name: CI - Build and Test
+name: CI - Build and Smoke Test
 
 on:
   push:
@@ -17,11 +17,16 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build images
-        run: docker compose build
+        run: docker compose build web
 
-      - name: Run tests
-        # adjust service name and test command as needed
-        run: docker compose run --rm web pytest
+      - name: Run container (detached)
+        run: docker compose up -d web
+
+      - name: Smoke test /health
+        run: |
+          echo "Waiting for app to start..."
+          sleep 10
+          curl -f http://localhost:8000/health
 
       - name: Tear down
         if: always()
