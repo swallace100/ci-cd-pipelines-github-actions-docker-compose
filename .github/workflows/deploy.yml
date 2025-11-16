@@ -1,0 +1,36 @@
+name: CD - Build, Push, Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # allow manual trigger
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    env:
+      REGISTRY: ghcr.io
+      IMAGE_NAME: ${{ github.repository }} # owner/repo
+      TAG: ${{ github.sha }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push images
+        run: |
+          docker compose build
+          # Make sure your docker-compose.yml has image: lines for services you want to push
+          docker compose push

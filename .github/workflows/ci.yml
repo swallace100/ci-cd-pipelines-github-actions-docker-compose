@@ -1,0 +1,28 @@
+name: CI - Build and Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build images
+        run: docker compose build
+
+      - name: Run tests
+        # adjust service name and test command as needed
+        run: docker compose run --rm web pytest
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v
